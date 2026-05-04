@@ -97,7 +97,7 @@ Since v4.0.0:
 
 ```bash
 # Clone and setup
-git clone https://github.com/raold/second-brain.git
+git clone https://github.com/palakvarshney23/second-brain.git
 cd second-brain
 python -m venv .venv
 source .venv/bin/activate
@@ -152,16 +152,16 @@ pip install second-brain==4.2.3
 
 Or using Docker:
 ```bash
-docker pull raold/second-brain:v4.2.3
+docker pull palakvarshney23/second-brain:v4.2.3
 ```
 
 ## 🐛 Bug Reports
 
-Report issues at: https://github.com/raold/second-brain/issues
+Report issues at: https://github.com/palakvarshney23/second-brain/issues
 
 ---
 
-**Full Changelog:** [v4.2.2...v4.2.3](https://github.com/raold/second-brain/compare/v4.2.2...v4.2.3)
+**Full Changelog:** [v4.2.2...v4.2.3](https://github.com/palakvarshney23/second-brain/compare/v4.2.2...v4.2.3)
 
 **"The best code is not just written, it's crafted."** - Second Brain v4.2.3
 

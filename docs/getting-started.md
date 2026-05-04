@@ -17,7 +17,7 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/raold/second-brain.git
+git clone https://github.com/palakvarshney23/second-brain.git
 cd second-brain
 ```
 
@@ -208,7 +208,7 @@ kill -9 <pid>
 
 ## Getting Help
 
-- 📖 [Full Documentation](https://github.com/raold/second-brain/blob/main/README.md)
-- 🐛 [Report Issues](https://github.com/raold/second-brain/issues)
-- 💬 [Discussions](https://github.com/raold/second-brain/discussions)
-- 📧 [Contact Team](mailto:support@secondbrain.ai)
+- 📖 [Full Documentation](https://github.com/palakvarshney23/second-brain/blob/main/README.md)
+- 🐛 [Report Issues](https://github.com/palakvarshney23/second-brain/issues)
+- 💬 [Discussions](https://github.com/palakvarshney23/second-brain/discussions)
+- 📧 [Contact Team](mailto:palakvarshney23012003@gmail.com)

@@ -7,7 +7,7 @@ Second Brain works seamlessly on Windows, macOS, and Linux. The setup automatica
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/raold/second-brain.git
+git clone https://github.com/palakvarshney23/second-brain.git
 cd second-brain
 
 # 2. Run platform setup (one-time)

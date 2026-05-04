@@ -9,7 +9,7 @@
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/yourusername/second-brain.git
+git clone https://github.com/palakvarshney23/second-brain.git
 cd second-brain
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate

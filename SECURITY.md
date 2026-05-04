@@ -120,7 +120,7 @@ If you accidentally commit secrets:
 wget https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar
 
 # Create a backup
-git clone --mirror https://github.com/yourusername/second-brain.git second-brain-backup
+git clone --mirror https://github.com/palakvarshney23/second-brain.git second-brain-backup
 
 # Remove secrets
 java -jar bfg-1.14.0.jar --replace-text passwords.txt second-brain-backup

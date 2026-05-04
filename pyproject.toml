@@ -9,10 +9,10 @@ description = "A production-ready personal knowledge management system"
 readme = "README.md"
 license = {text = "AGPL-3.0"}
 authors = [
-    {name = "Second Brain Team", email = "team@secondbrain.ai"},
+    {name = "Palak Varshney", email = "palakvarshney23012003@gmail.com"},
 ]
 maintainers = [
-    {name = "Second Brain Team", email = "team@secondbrain.ai"},
+    {name = "Palak Varshney", email = "palakvarshney23012003@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -149,10 +149,10 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/secondbrain/secondbrain"
+Homepage = "https://github.com/palakvarshney23/second-brain"
 Documentation = "https://docs.secondbrain.ai"
-Repository = "https://github.com/secondbrain/secondbrain"
-Issues = "https://github.com/secondbrain/secondbrain/issues"
+Repository = "https://github.com/palakvarshney23/second-brain"
+Issues = "https://github.com/palakvarshney23/second-brain/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

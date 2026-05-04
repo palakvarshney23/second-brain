@@ -25,5 +25,5 @@
 - [Changelog](CHANGELOG.md)
 
 ## Support
-- GitHub Issues: https://github.com/yourusername/second-brain/issues
+- GitHub Issues: https://github.com/palakvarshney23/second-brain/issues
 - Version: 4.2.3

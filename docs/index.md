@@ -1,10 +1,10 @@
 # 🧠 Second Brain
 
-[![Version](https://img.shields.io/badge/version-5.0.0-blue)](https://github.com/raold/second-brain)
+[![Version](https://img.shields.io/badge/version-5.0.0-blue)](https://github.com/palakvarshney23/second-brain)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)](https://www.gnu.org/licenses/agpl-3.0.html)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-blue)](https://www.postgresql.org/)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![100% Local](https://img.shields.io/badge/100%25-Local_AI-orange)](https://github.com/raold/second-brain)
+[![100% Local](https://img.shields.io/badge/100%25-Local_AI-orange)](https://github.com/palakvarshney23/second-brain)
 
 ## 🚀 What is Second Brain?
 
@@ -42,7 +42,7 @@ WebSocket-powered live metrics, processing status, and performance monitoring.
 
 ```bash
 # Clone the repository
-git clone https://github.com/raold/second-brain.git
+git clone https://github.com/palakvarshney23/second-brain.git
 cd second-brain
 
 # Set up Python environment
@@ -123,14 +123,14 @@ second-brain/
 
 ## 🔗 Resources
 
-- [📦 GitHub Repository](https://github.com/raold/second-brain)
+- [📦 GitHub Repository](https://github.com/palakvarshney23/second-brain)
 - [🎨 Web Interface](interface.html)
-- [📖 Full Documentation](https://github.com/raold/second-brain/blob/main/README.md)
-- [🐛 Report Issues](https://github.com/raold/second-brain/issues)
+- [📖 Full Documentation](https://github.com/palakvarshney23/second-brain/blob/main/README.md)
+- [🐛 Report Issues](https://github.com/palakvarshney23/second-brain/issues)
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/raold/second-brain/blob/main/CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/palakvarshney23/second-brain/blob/main/CONTRIBUTING.md) for details.
 
 ## 📝 License
 
@@ -138,4 +138,4 @@ This project is licensed under the [GNU Affero General Public License v3.0 (AGPL
 
 ---
 
-© 2024 Second Brain Project | Made with ❤️ by the Second Brain Team
+© 2024 Palak Varshney | Made with ❤️ by Palak Varshney

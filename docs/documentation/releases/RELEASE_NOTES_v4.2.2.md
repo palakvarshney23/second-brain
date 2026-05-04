@@ -58,7 +58,7 @@ Version 4.2.2 represents the **production-ready release** of Second Brain with c
 ### Quick Start
 ```bash
 # Clone the repository
-git clone https://github.com/raold/second-brain.git
+git clone https://github.com/palakvarshney23/second-brain.git
 cd second-brain
 
 # Set up environment
