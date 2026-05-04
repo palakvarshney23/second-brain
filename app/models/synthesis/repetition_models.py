@@ -1,0 +1,73 @@
+"""Repetition models for spaced repetition and review scheduling"""
+
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+class ReviewStatus(str, Enum):
+    """Status of memory review"""
+
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    SKIPPED = "skipped"
+    FAILED = "failed"
+
+
+class RepetitionSettings(BaseModel):
+    """Settings for spaced repetition"""
+
+    initial_interval_days: int = 1
+    multiplier: float = 2.5
+    minimum_interval_days: int = 1
+    maximum_interval_days: int = 365
+    ease_bonus: float = 1.3
+    ease_penalty: float = 0.8
+    graduation_interval_days: int = 21
+
+
+class ForgettingCurve(BaseModel):
+    """Model for forgetting curve calculations"""
+
+    memory_id: str
+    retention_strength: float = 1.0
+    last_review: datetime | None = None
+    review_count: int = 0
+    ease_factor: float = 2.5
+    interval_days: int = 1
+    next_review: datetime | None = None
+
+    def calculate_next_review(self) -> datetime:
+        """Calculate next review date based on current parameters"""
+        if self.last_review is None:
+            return datetime.now()
+        return self.last_review + timedelta(days=self.interval_days)
+
+
+class BulkReviewRequest(BaseModel):
+    """Request for bulk review operations"""
+
+    memory_ids: list[str]
+    user_id: str
+    review_type: str | None = "standard"
+    batch_size: int | None = 10
+
+
+class ReviewSchedule(BaseModel):
+    """Schedule for memory reviews"""
+
+    schedule_id: str = Field(default_factory=lambda: f"rev_{datetime.now().timestamp()}")
+    memory_id: str
+    user_id: str
+    scheduled_date: datetime
+    status: ReviewStatus = ReviewStatus.PENDING
+    difficulty_rating: float | None = None
+    time_spent_seconds: float | None = None
+    notes: str | None = None
+    forgetting_curve: ForgettingCurve | None = None
+    metadata: dict[str, Any] = {}
+    created_at: datetime = Field(default_factory=datetime.now)
+    completed_at: datetime | None = None

@@ -1,0 +1,276 @@
+"""
+Application Factory Pattern for Second Brain
+Creates configured FastAPI instances for different environments
+"""
+
+import asyncio
+import os
+from contextlib import asynccontextmanager, suppress
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app import __version__
+from app.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
+
+
+class AppState:
+    """Application state container"""
+
+    def __init__(self) -> None:
+        self.ready = False
+        self.memory_service = None
+        self.qdrant_client = None
+        self.persistence_task = None
+        self.shutdown_event = asyncio.Event()
+        self.startup_time = None
+        self.memory_count = 0
+
+
+def create_lifespan(config_name: str):
+    """Create lifespan handler for specific configuration"""
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Handle application startup and shutdown"""
+        # === STARTUP ===
+        logger.info(f"🚀 Starting Second Brain v{__version__} [{config_name}]")
+
+        # Initialize app state
+        app.state = AppState()
+
+        try:
+            # Initialize degradation manager
+            from app.core.degradation import get_degradation_manager
+
+            app.state.degradation_manager = get_degradation_manager()
+            await app.state.degradation_manager.perform_health_checks()
+
+            # Try PostgreSQL first, fall back to mock if it fails
+            use_mock = os.getenv("USE_MOCK_DB", "false").lower() == "true"
+
+            if use_mock:
+                logger.info("📦 Using mock storage (USE_MOCK_DB=true)")
+                from app.storage.mock_storage import MockStorage
+                app.state.memory_service = MockStorage()
+                await app.state.memory_service.initialize()
+            else:
+                try:
+                    # Initialize memory service with PostgreSQL backend
+                    from app.services.memory_service import MemoryService
+                    app.state.memory_service = MemoryService()
+                    await app.state.memory_service.initialize()
+                except Exception as e:
+                    logger.warning(f"⚠️ PostgreSQL failed: {e}, falling back to mock storage")
+                    from app.storage.mock_storage import MockStorage
+                    app.state.memory_service = MockStorage()
+                    await app.state.memory_service.initialize()
+
+            # Load existing memories
+            memories = await app.state.memory_service.list_memories()
+            app.state.memory_count = len(memories)
+
+            # Log status
+            stats = await app.state.memory_service.get_statistics()
+            logger.info(
+                f"📚 Loaded {app.state.memory_count} memories using {stats.get('backend', 'unknown')} backend",
+            )
+            if "degradation_level" in stats:
+                logger.info(f"⚡ Degradation level: {stats['degradation_level']}")
+
+            # Start background persistence task (if not testing)
+            if config_name != "testing":
+                app.state.persistence_task = asyncio.create_task(
+                    periodic_persistence(app.state.memory_service),
+                )
+
+            # Mark as ready
+            app.state.ready = True
+            logger.info("✅ Application ready to serve requests")
+
+        except Exception as e:
+            logger.exception(f"❌ Startup failed: {e}")
+            raise
+
+        yield
+
+        # === SHUTDOWN ===
+        logger.info("👋 Graceful shutdown initiated...")
+
+        # Stop accepting new requests
+        app.state.ready = False
+
+        # Cancel background tasks
+        if app.state.persistence_task:
+            app.state.persistence_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await app.state.persistence_task
+
+        # Final persistence
+        if app.state.memory_service and config_name != "testing":
+            try:
+                await app.state.memory_service.save_to_disk()
+                logger.info("💾 Final memory persistence complete")
+            except Exception as e:
+                logger.exception(f"Failed to persist memories on shutdown: {e}")
+
+        logger.info("✅ Shutdown complete")
+
+    return lifespan
+
+
+async def periodic_persistence(memory_service, interval: int = 30) -> None:
+    """Periodically persist memories to disk (only for mock storage)"""
+    while True:
+        try:
+            await asyncio.sleep(interval)
+            # Only save to disk if using mock storage
+            if hasattr(memory_service, 'save_to_disk'):
+                await memory_service.save_to_disk()
+                logger.debug("💾 Periodic persistence checkpoint")
+        except asyncio.CancelledError:
+            # Final save before exit
+            if hasattr(memory_service, 'save_to_disk'):
+                await memory_service.save_to_disk()
+            raise
+        except Exception as e:
+            logger.exception(f"Persistence error: {e}")
+
+
+def create_app(config_name: str = "development") -> FastAPI:
+    """
+    Application factory for creating configured FastAPI instances
+
+    Args:
+        config_name: Configuration name (development, production, testing)
+
+    Returns:
+        Configured FastAPI application
+    """
+    # Validate config name
+    valid_configs = ["development", "production", "testing"]
+    if config_name not in valid_configs:
+        raise ValueError(f"Invalid config: {config_name}. Must be one of {valid_configs}")
+
+    # Create app with lifespan
+    app = FastAPI(
+        title=f"Second Brain API [{config_name.title()}]",
+        description="Single-user memory management system with advanced features",
+        version=__version__,
+        lifespan=create_lifespan(config_name),
+        docs_url="/docs" if config_name != "production" else None,
+        redoc_url="/redoc" if config_name != "production" else None,
+    )
+
+    # Add CORS middleware
+    cors_origins = (
+        ["*"] if config_name == "development" else os.getenv("CORS_ORIGINS", "").split(",")
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Store config in app
+    app.config_name = config_name
+
+    # Include routers with tags for better organization
+    try:
+        from app.routes.v2 import (
+            health_router,
+            memories_router,
+            search_advanced_router,
+            search_router,
+            websocket_router,
+        )
+
+        # Include routers with proper tags
+        app.include_router(memories_router, prefix="/api/v2", tags=["Memories"])
+        app.include_router(search_router, prefix="/api/v2", tags=["Search"])
+        app.include_router(search_advanced_router, prefix="/api/v2", tags=["Advanced Search"])
+        app.include_router(health_router, prefix="/api/v2", tags=["System"])
+        app.include_router(websocket_router, prefix="/api/v2", tags=["Real-time"])
+
+        # Google Drive Integration
+        from app.routes.gdrive_real import router as gdrive_router
+        app.include_router(gdrive_router, prefix="/api/v1/gdrive", tags=["Google Drive"])
+        logger.info("✅ Google Drive routes loaded")
+
+        # Add the Google Drive pipeline for processing files
+        try:
+            from app.routes.gdrive_pipeline import router as gdrive_pipeline_router
+            app.include_router(gdrive_pipeline_router, tags=["Google Drive Pipeline"])
+            logger.info("✅ Google Drive Pipeline loaded")
+        except ImportError as e:
+            logger.warning(f"Failed to import Google Drive pipeline routes: {e}")
+
+        # Photo Pipeline Routes
+        try:
+            from app.routes.photo_pipeline import router as photo_pipeline_router
+            app.include_router(photo_pipeline_router, prefix="/api", tags=["Photo Pipeline"])
+            logger.info("📸 Photo Pipeline routes loaded - Ready to process your images!")
+        except ImportError as e:
+            logger.exception(f"Failed to import photo pipeline routes: {e}")
+
+        # Metrics Routes
+        try:
+            from app.routes.metrics import router as metrics_router
+            app.include_router(metrics_router, prefix="/api/v2", tags=["Metrics"])
+            logger.info("📊 Metrics routes loaded - Performance monitoring active!")
+        except ImportError as e:
+            logger.exception(f"Failed to import metrics routes: {e}")
+
+        logger.info("📍 Routes registered successfully with tags")
+    except ImportError as e:
+        logger.exception(f"Failed to import routes: {e}")
+        # Continue anyway for testing
+
+    # Add root endpoint
+    @app.get("/")
+    async def root():
+        """Root endpoint with environment info"""
+        return {
+            "name": "Second Brain API",
+            "version": __version__,
+            "environment": config_name,
+            "ready": getattr(app.state, "ready", False),
+            "docs": "/docs" if config_name != "production" else None,
+        }
+
+    # Add basic health check
+    @app.get("/health")
+    async def health():
+        """Basic health check"""
+        is_ready = getattr(app.state, "ready", False)
+        if not is_ready:
+            return {"status": "starting", "ready": False}, 503
+
+        return {
+            "status": "healthy",
+            "ready": True,
+            "environment": config_name,
+            "memories_loaded": getattr(app.state, "memory_count", 0),
+        }
+
+    return app
+
+
+# Convenience functions for common configurations
+def create_dev_app() -> FastAPI:
+    """Create development application"""
+    return create_app("development")
+
+
+def create_prod_app() -> FastAPI:
+    """Create production application"""
+    return create_app("production")
+
+
+def create_test_app() -> FastAPI:
+    """Create testing application"""
+    return create_app("testing")
